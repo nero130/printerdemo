@@ -1,37 +1,47 @@
 const express = require("express");
 const cors = require("cors");
-const printer = require("pdf-to-printer");
+const escpos = require("escpos");
+
+escpos.USB = require("escpos-usb");
+escpos.Bluetooth = require("escpos-bluetooth");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Obtener lista de impresoras disponibles
+// Detectar impresoras USB
 app.get("/printers", async (req, res) => {
   try {
-    const printers = await printer.getPrinters();
-    res.json(printers);
+    const device = new escpos.USB();
+    res.json({ message: "Impresora detectada", status: "OK" });
   } catch (error) {
-    console.error("Error obteniendo impresoras:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "No se encontró impresora USB" });
   }
 });
 
-// Imprimir un archivo PDF en la impresora seleccionada
+// Imprimir en impresora térmica
 app.post("/print", async (req, res) => {
-  const { printerName, filePath } = req.body;
+  const { text } = req.body;
 
-  if (!filePath) {
-    return res.status(400).json({ error: "Debe proporcionar un archivo PDF" });
-  }
+  if (!text) return res.status(400).json({ error: "Texto vacío" });
 
   try {
-    await printer.print(filePath, { printer: printerName });
-    res.json({ message: "Archivo enviado a la impresora correctamente" });
+    const device = new escpos.USB();
+    const printer = new escpos.Printer(device);
+
+    device.open((err) => {
+      if (err) return res.status(500).json({ error: "Error abriendo impresora" });
+
+      printer
+        .text(text)
+        .cut()
+        .close();
+      
+      res.json({ message: "Impresión enviada" });
+    });
   } catch (error) {
-    console.error("Error al imprimir:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Error al imprimir" });
   }
 });
 
-app.listen(3001, () => console.log("Servidor en http://localhost:3001"));
+app.listen(3001, () => console.log("Servidor corriendo en Termux en el puerto 3001"));

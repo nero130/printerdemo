@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
+    "escpos": "^3.0.0-alpha.6",
     "express": "^4.21.2",
     "node-printer": "^1.0.4",
     "pdf-to-printer": "^5.6.0",
