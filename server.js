@@ -18,6 +18,7 @@ wss.on("connection", ws => {
 app.get("/printers", (req, res) => {
   try {
     const printers = printer.getPrinters(); // Obtiene las impresoras disponibles
+    console.log("Impresoras disponibles:", printers)
     res.json(printers);
   } catch (error) {
     res.status(500).json({ error: error.message });
